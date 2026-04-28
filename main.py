@@ -46,11 +46,11 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-app.include_router(auth_router)
-app.include_router(nannies_router)
-app.include_router(bookings_router)
-app.include_router(chat_router)
-app.include_router(users_router)
+app.include_router(auth_router,     prefix="/api")
+app.include_router(nannies_router,  prefix="/api")
+app.include_router(bookings_router, prefix="/api")
+app.include_router(chat_router,     prefix="/api")
+app.include_router(users_router,    prefix="/api")
 
 
 @app.get("/", tags=["Health"])
