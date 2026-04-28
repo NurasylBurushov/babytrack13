@@ -10,6 +10,14 @@ from sms import create_otp, verify_otp, send_sms
 router = APIRouter(prefix="/auth", tags=["Авторизация"])
 
 
+@router.post("/sms", summary="Алиас: отправить SMS")
+async def send_otp_alias(body: SendOTPRequest, db: AsyncSession = Depends(get_db)):
+    return await send_otp(body, db)
+
+@router.post("/verify-sms", response_model=TokenResponse, summary="Алиас: подтвердить SMS")
+async def verify_alias(body: VerifyOTPRequest, db: AsyncSession = Depends(get_db)):
+    return await verify(body, db)
+
 @router.post("/send-otp", summary="Отправить SMS с кодом")
 async def send_otp(body: SendOTPRequest, db: AsyncSession = Depends(get_db)):
     """
