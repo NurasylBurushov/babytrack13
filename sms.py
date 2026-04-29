@@ -1,38 +1,48 @@
 import httpx
 import os
+import re
 
 async def send_sms(phone: str, code: str) -> bool:
-    # БЕРЕМ ЛОГИН И ПАРОЛЬ ИЗ ПЕРЕМЕННЫХ ОКРУЖЕНИЯ (ОБ ЭТОМ НИЖЕ)
     login = os.getenv("SMSC_LOGIN")
     password = os.getenv("SMSC_PASSWORD")
     
     if not login or not password:
-        print("ОШИБКА: Не заданы переменные SMSC_LOGIN и SMSC_PASSWORD в .env")
+        print("ОШИБКА: Не заданы SMSC_LOGIN и SMSC_PASSWORD")
         return False
 
+    # Чистим номер — оставляем только цифры
+    clean = re.sub(r'\D', '', phone)
+    
+    # SMSC.kz для Казахстана принимает формат 77XXXXXXXXX (11 цифр)
+    if clean.startswith('8') and len(clean) == 11:
+        clean = '7' + clean[1:]
+    elif len(clean) == 10:
+        clean = '7' + clean
+    
+    print(f"📱 Отправка SMS на: {clean}")  # увидишь в логах Railway
+    
     message = f"Код Sabi Track: {code}"
     url = "https://smsc.kz/sys/send.php"
     
-    # Формируем тело запроса (smsc.kz требует формат x-www-form-urlencoded)
     payload = {
         "login": login,
         "psw": password,
-        "phones": phone,
-        "mes": message
+        "phones": clean,
+        "mes": message,
+        "charset": "utf-8"
     }
-
+    
     try:
         async with httpx.AsyncClient() as client:
-            # data= отправляет как form-data, json= отправил бы как JSON (smsc.kz не поймет)
             response = await client.post(url, data=payload)
+            print(f"📨 SMSC ответ: {response.text}")  # увидишь точный ответ
             
-            # smsc.kz возвращает строку "OK..." в случае успеха
             if "OK" in response.text:
-                print(f"SMS успешно отправлено на {phone}")
+                print(f"✅ SMS отправлено на {clean}")
                 return True
             else:
-                print(f"Ошибка SMS сервиса: {response.text}")
+                print(f"❌ Ошибка SMSC: {response.text}")
                 return False
     except Exception as e:
-        print(f"Сетевая ошибка при отправке SMS: {e}")
-        return False
+        print(f"❌ Сетевая ошибка: {e}")
+        return False 
