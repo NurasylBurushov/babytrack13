@@ -28,9 +28,22 @@ class User(Base):
     __tablename__ = "users"
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    phone = Column(String(20), unique=True, nullable=False, index=True)
+
+    # Телефон — теперь необязательный (для Google/Apple входа)
+    phone = Column(String(20), unique=True, nullable=True, index=True)
+
+    # Email и пароль для email входа
+    email = Column(String(255), unique=True, nullable=True, index=True)
+    password = Column(String(255), nullable=True)  # хранить хэш!
+
+    # Социальные входы
+    google_id = Column(String(255), unique=True, nullable=True, index=True)
+    apple_id = Column(String(255), unique=True, nullable=True, index=True)
+
     name = Column(String(100))
-    avatar_url = Column(String(500))
+    avatar = Column(String(500))        # для Google аватар
+    avatar_url = Column(String(500))    # старое поле — оставляем
+    role = Column(String(50), default="parent")
     is_active = Column(Boolean, default=True)
     is_verified = Column(Boolean, default=False)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
@@ -63,7 +76,6 @@ class Nanny(Base):
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     user_id = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=False, unique=True)
 
-    # Основная информация
     name = Column(String(100), nullable=False)
     age = Column(Integer)
     bio = Column(Text)
@@ -71,22 +83,18 @@ class Nanny(Base):
     hourly_rate = Column(Integer, nullable=False)
     experience_years = Column(Integer, default=0)
 
-    # Местоположение
     city = Column(String(100), default="Кокшетау")
     district = Column(String(100))
     latitude = Column(Float)
     longitude = Column(Float)
 
-    # Характеристики
     specialties = Column(ARRAY(String), default=[])
     languages = Column(ARRAY(String), default=[])
     work_days = Column(ARRAY(String), default=[])
 
-    # Рейтинг (вычисляется)
     rating = Column(Float, default=0.0)
     review_count = Column(Integer, default=0)
 
-    # Статусы
     is_verified = Column(Boolean, default=False)
     is_available = Column(Boolean, default=True)
     is_active = Column(Boolean, default=True)
@@ -94,7 +102,6 @@ class Nanny(Base):
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
 
-    # Связи
     bookings = relationship("Booking", back_populates="nanny")
     reviews = relationship("Review", back_populates="nanny")
     favorites = relationship("Favorite", back_populates="nanny")
@@ -107,9 +114,9 @@ class ScheduleSlot(Base):
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     nanny_id = Column(UUID(as_uuid=True), ForeignKey("nannies.id"), nullable=False)
-    day_of_week = Column(Integer)          # 0=Пн ... 6=Вс
-    start_time = Column(String(5))        # "09:00"
-    end_time = Column(String(5))          # "18:00"
+    day_of_week = Column(Integer)
+    start_time = Column(String(5))
+    end_time = Column(String(5))
     is_available = Column(Boolean, default=True)
 
     nanny = relationship("Nanny", back_populates="schedule_slots")
