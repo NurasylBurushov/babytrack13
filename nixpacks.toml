@@ -1,12 +1,12 @@
+[variables]
+PYTHON_VERSION = "3.11"
+
 [phases.setup]
-# УБРАЛИ python311 и pip. Оставили ТОЛЬКО системные зависимости.
-# gcc нужен, если в requirements.txt есть пакеты, которые компилируются из C/C++ (например, psycopg2, numpy)
-nixPkgs = ["gcc"]
+# Добавили postgresql (для asyncpg) и openssl (для шифрования паролей в passlib)
+nixPkgs = ["gcc", "postgresql", "openssl"]
 
 [phases.install]
-# Nixpacks сам создаст venv и активирует его перед этой командой
 cmds = ["python3 -m pip install -r requirements.txt"]
 
 [start]
-# Ваш стартовый скрипт идеален для FastAPI
-cmd = "python3 -m uvicorn main:app --host 0.0.0.0 --port ${PORT:-8000}"
+cmd = "python3 -m uvicorn main:app --host 0.0.0.0 --port ${PORT:-8000}
