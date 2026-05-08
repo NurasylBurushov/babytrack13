@@ -3,7 +3,8 @@ from fastapi import Depends, HTTPException
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
-from jose import jwt, JWTError
+import jwt
+from jwt import PyJWTError as JWTError
 from database import get_db
 import os
 
