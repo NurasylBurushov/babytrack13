@@ -39,4 +39,23 @@ async def get_current_user(
     user = result.scalar_one_or_none()
     if not user or not user.is_active:
         raise HTTPException(401, detail="Пользователь не найден")
+import jwt
+from jwt import PyJWTError as JWTError
+# Убедитесь, что settings у вас импортирован, если вы его используете
+# from config import settings 
+
+async def decode_token(token: str):
+    try:
+        # Расшифровываем токен. 
+        # ВНИМАНИЕ: замените settings.SECRET_KEY на вашу переменную, если она называется иначе
+        payload = jwt.decode(token, settings.SECRET_KEY, algorithms=["HS256"])
+        return payload
+    except JWTError:
+        return None
+
+
+
+
+
+    
     return user
