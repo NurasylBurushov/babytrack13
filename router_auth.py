@@ -1,3 +1,4 @@
+from config import settings
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
@@ -47,9 +48,11 @@ def format_user(user: User, token: str) -> dict:
     }
 
 async def send_sms(phone: str, code: str) -> bool:
-    import os, httpx
-    login    = os.getenv("SMSC_LOGIN")
-    password = os.getenv("SMSC_PASSWORD")
+    import httpx
+    
+    # БЕРЕМ ЛОГИН И ПАРОЛЬ ИЗ НАШЕГО CONFIG
+    login    = settings.SMSC_LOGIN
+    password = settings.SMSC_PASSWORD
 
     if not login or not password:
         print(f"⚠️ SMS в DEV режиме. Код для {phone}: {code}")
