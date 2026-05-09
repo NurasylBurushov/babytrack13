@@ -13,8 +13,8 @@ class Settings(BaseSettings):
     GOOGLE_CLIENT_SECRET: str = "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"
     
     # СМС сервис (замените названия на те, что у вас в коде, если они другие)
-    SMS_API_KEY: str = "Nurs221"
-    SMS_SENDER_ID: str = "Yfhenjkexibq7"
+    SMSC_LOGIN: str = "Nurs221"
+    SMSC_PASSWORD: str = "Yfhenjkexibq7"
 
     # Pydantic сам найдет файл .env и прочитает оттуда переменные
     class Config:
