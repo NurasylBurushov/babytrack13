@@ -46,6 +46,10 @@ async def my_chats(
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
+    # ✅ ПРОВЕРКА АВТОРИЗАЦИИ
+    if not current_user:
+        raise HTTPException(status_code=401, detail="Требуется авторизация")
+    
     result = await db.execute(
         select(Chat)
         .where(Chat.user_id == current_user.id)
@@ -75,16 +79,18 @@ async def my_chats(
         unread = len(unread_r.scalars().all())
 
         nanny_r = await db.execute(select(Nanny).where(Nanny.id == chat.nanny_id))
-        nanny = nanny_r.scalar_one()
-
-        out.append(ChatResponse(
-            id=chat.id,
-            booking_id=chat.booking_id,
-            nanny=nanny_to_response(nanny),
-            last_message=last_msg.text if last_msg else None,
-            unread_count=unread,
-            created_at=chat.created_at,
-        ))
+        nanny = nanny_r.scalar_one_or_none()
+        
+        # ✅ ПРОВЕРКА НЯНЕЧКИ
+        if nanny:
+            out.append(ChatResponse(
+                id=chat.id,
+                booking_id=chat.booking_id,
+                nanny=nanny_to_response(nanny),
+                last_message=last_msg.text if last_msg else None,
+                unread_count=unread,
+                created_at=chat.created_at,
+            ))
     return out
 
 
@@ -96,6 +102,10 @@ async def get_messages(
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
+    # ✅ ПРОВЕРКА АВТОРИЗАЦИИ
+    if not current_user:
+        raise HTTPException(status_code=401, detail="Требуется авторизация")
+    
     # Проверяем доступ к чату
     chat_r = await db.execute(select(Chat).where(Chat.id == chat_id))
     chat = chat_r.scalar_one_or_none()
@@ -122,6 +132,7 @@ async def get_messages(
         )
         .values(is_read=True)
     )
+    await db.commit()
 
     return list(reversed(messages))
 
@@ -133,6 +144,10 @@ async def send_message(
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
+    # ✅ ПРОВЕРКА АВТОРИЗАЦИИ
+    if not current_user:
+        raise HTTPException(status_code=401, detail="Требуется авторизация")
+    
     chat_r = await db.execute(select(Chat).where(Chat.id == chat_id))
     chat = chat_r.scalar_one_or_none()
     if not chat or chat.user_id != current_user.id:
@@ -146,6 +161,7 @@ async def send_message(
     )
     db.add(msg)
     await db.flush()
+    await db.commit()
 
     # Рассылаем по WebSocket
     await manager.broadcast(chat_id, {
@@ -172,15 +188,20 @@ async def websocket_chat(
     Входящий JSON: {"text": "Привет!", "type": "text"}
     Исходящий JSON: {"id": "...", "sender_id": "...", "text": "...", "created_at": "..."}
     """
+    # ✅ ПРОВЕРКА ТОКЕНА
+    if not token:
+        await ws.close(code=4001, reason="Требуется токен")
+        return
+    
     user_id = decode_token(token)
     if not user_id:
-        await ws.close(code=4001)
+        await ws.close(code=4001, reason="Некорректный токен")
         return
 
     user_r = await db.execute(select(User).where(User.id == user_id))
     user = user_r.scalar_one_or_none()
     if not user:
-        await ws.close(code=4001)
+        await ws.close(code=4001, reason="Пользователь не найден")
         return
 
     await manager.connect(chat_id, ws)
@@ -198,9 +219,9 @@ async def websocket_chat(
                 type=MessageType.text,
                 text=text,
             )
-            async with db.begin_nested():
-                db.add(msg)
-                await db.flush()
+            db.add(msg)
+            await db.flush()
+            await db.commit()
 
             await manager.broadcast(chat_id, {
                 "id": str(msg.id),
@@ -213,5 +234,5 @@ async def websocket_chat(
     except WebSocketDisconnect:
         manager.disconnect(chat_id, ws)
     except Exception as e:
-        print(f"WS error: {e}")
+        print(f"WebSocket error: {e}")
         manager.disconnect(chat_id, ws)
