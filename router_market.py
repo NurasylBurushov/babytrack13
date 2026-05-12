@@ -9,9 +9,6 @@ from pydantic import BaseModel
 from typing import Optional
 import uuid
 
-# ══════════════════════════════════════════════════════════
-# MARKET
-# ══════════════════════════════════════════════════════════
 router = APIRouter(prefix="/market", tags=["Маркет"])
 
 class MarketItemCreate(BaseModel):
@@ -53,6 +50,10 @@ async def create_product(
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
+    # ✅ ПРОВЕРКА АВТОРИЗАЦИИ
+    if not current_user:
+        raise HTTPException(status_code=401, detail="Требуется авторизация")
+    
     item = MarketItem(
         seller_id   = current_user.id,
         title       = body.title,
@@ -73,6 +74,10 @@ async def delete_product(
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
+    # ✅ ПРОВЕРКА АВТОРИЗАЦИИ
+    if not current_user:
+        raise HTTPException(status_code=401, detail="Требуется авторизация")
+    
     result = await db.execute(select(MarketItem).where(MarketItem.id == uuid.UUID(item_id)))
     item = result.scalar_one_or_none()
     if not item:
@@ -102,6 +107,10 @@ async def get_nanny_location(
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
+    # ✅ ПРОВЕРКА АВТОРИЗАЦИИ
+    if not current_user:
+        raise HTTPException(status_code=401, detail="Требуется авторизация")
+    
     result = await db.execute(
         select(NannyLocation)
         .where(NannyLocation.nanny_id == uuid.UUID(nanny_id))
@@ -126,6 +135,10 @@ async def update_nanny_location(
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
+    # ✅ ПРОВЕРКА АВТОРИЗАЦИИ
+    if not current_user:
+        raise HTTPException(status_code=401, detail="Требуется авторизация")
+    
     loc = NannyLocation(
         nanny_id  = uuid.UUID(nanny_id),
         latitude  = body.latitude,
