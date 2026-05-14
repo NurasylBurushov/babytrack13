@@ -14,6 +14,9 @@ from uuid import UUID
 
 router = APIRouter(prefix="/chats", tags=["Чат"])
 
+# Метка для /health и логов: на сервере должна совпадать с ответом API после redeploy.
+ROUTER_CHAT_SIGNATURE = "my_chats_auth_user_v2"
+
 
 # ── WebSocket Connection Manager ──────────────────────────
 class ConnectionManager:
