@@ -11,6 +11,17 @@ import uuid
 
 router = APIRouter(prefix="/tracking", tags=["Отслеживание"])
 
+
+def _parse_nanny_uuid(nanny_id: str) -> uuid.UUID:
+    try:
+        return uuid.UUID(str(nanny_id).strip())
+    except ValueError:
+        raise HTTPException(
+            status_code=400,
+            detail="Некорректный id няни: ожидается UUID (например из профиля няни в API).",
+        ) from None
+
+
 class LocationUpdate(BaseModel):
     latitude: float
     longitude: float
@@ -26,7 +37,7 @@ async def get_nanny_location(
 ):
     result = await db.execute(
         select(NannyLocation)
-        .where(NannyLocation.nanny_id == uuid.UUID(nanny_id))
+        .where(NannyLocation.nanny_id == _parse_nanny_uuid(nanny_id))
         .order_by(NannyLocation.created_at.desc())
     )
     loc = result.scalars().first()
@@ -49,7 +60,7 @@ async def update_location(
     current_user: User = Depends(get_current_user)
 ):
     loc = NannyLocation(
-        nanny_id  = uuid.UUID(nanny_id),
+        nanny_id=_parse_nanny_uuid(nanny_id),
         latitude  = body.latitude,
         longitude = body.longitude,
         address   = body.address,
