@@ -77,7 +77,8 @@ async def list_nannies(
 
     # Подсчёт всего
     count_q = select(func.count()).select_from(query.subquery())
-    total = (await db.execute(count_q)).scalar()
+    raw_total = (await db.execute(count_q)).scalar()
+    total = int(raw_total or 0)
 
     # Пагинация
     query = query.offset((page - 1) * per_page).limit(per_page)

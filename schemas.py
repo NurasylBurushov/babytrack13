@@ -77,7 +77,7 @@ class NannyResponse(BaseModel):
     avatar_url: Optional[str]
     hourly_rate: int
     experience_years: int
-    city: str
+    city: Optional[str] = None
     district: Optional[str]
     latitude: Optional[float]
     longitude: Optional[float]
@@ -90,11 +90,25 @@ class NannyResponse(BaseModel):
     is_available: bool
     distance_km: Optional[float] = None   # вычисляется динамически
 
+    @field_validator("name", mode="before")
+    @classmethod
+    def name_non_empty(cls, v):
+        if v is None or not str(v).strip():
+            return "Няня"
+        return str(v).strip()
+
     @field_validator("specialties", "languages", "work_days", mode="before")
     @classmethod
     def none_arrays_to_empty(cls, v):
         """PostgreSQL ARRAY может прийти как NULL — для JSON и Pydantic нужны списки."""
         return v if v is not None else []
+
+    @field_validator("city", mode="before")
+    @classmethod
+    def city_none_to_default(cls, v):
+        if v is None or (isinstance(v, str) and not str(v).strip()):
+            return "Астана"
+        return str(v)
 
     class Config:
         from_attributes = True
