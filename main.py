@@ -45,7 +45,7 @@ async def lifespan(app: FastAPI):
 app = FastAPI(
     title="SabiTrack API",
     description="Бэкенд для приложения SabiTrack",
-    version="2.0.0",
+    version="2.0.1",
     lifespan=lifespan,
 )
 
@@ -99,12 +99,18 @@ app.include_router(tracking_router, prefix="/api")
 
 @app.get("/")
 async def root():
-    return {"app": "SabiTrack API", "version": "2.0.0", "status": "ok"}
+    return {"app": "SabiTrack API", "version": "2.0.1", "status": "ok"}
 
 
 @app.get("/health")
 async def health():
-    return {"status": "ok"}
+    """Проверка деплоя: после redeploy должны появиться git_sha и chat_router."""
+    return {
+        "status": "ok",
+        "version": "2.0.1",
+        "chat_router": "router_chat+auth_user",
+        "git_sha": os.environ.get("RAILWAY_GIT_COMMIT_SHA", "unknown"),
+    }
 
 
 # ------------------ run ------------------
