@@ -1,7 +1,4 @@
-"""
-Устаревшая копия чата (была с current_user и дублем логики).
-Используйте только router_chat — он подключён в main.py.
-"""
-from router_chat import ROUTER_CHAT_SIGNATURE, router
+"""Устаревший путь; используйте chat_api. Реализация — в chat_api.py."""
+from chat_api import ROUTER_CHAT_SIGNATURE, router
 
 __all__ = ["router", "ROUTER_CHAT_SIGNATURE"]

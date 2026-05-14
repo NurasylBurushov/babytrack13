@@ -18,7 +18,7 @@ from database import create_tables
 from router_auth import router as auth_router
 from router_users import router as users_router
 from router_nannies import router as nannies_router
-from router_chat import router as chat_router, ROUTER_CHAT_SIGNATURE
+from chat_api import router as chat_router, ROUTER_CHAT_SIGNATURE
 from router_market import router as market_router
 from router_tracking import router as tracking_router
 
@@ -50,7 +50,7 @@ async def lifespan(app: FastAPI):
 app = FastAPI(
     title="SabiTrack API",
     description="Бэкенд для приложения SabiTrack",
-    version="2.0.2",
+    version="2.0.3",
     lifespan=lifespan,
 )
 
@@ -104,7 +104,7 @@ app.include_router(tracking_router, prefix="/api")
 
 @app.get("/")
 async def root():
-    return {"app": "SabiTrack API", "version": "2.0.2", "status": "ok"}
+    return {"app": "SabiTrack API", "version": "2.0.3", "status": "ok"}
 
 
 @app.get("/health")
@@ -112,8 +112,8 @@ async def health():
     """Проверка деплоя: после redeploy должны появиться git_sha и chat_router."""
     return {
         "status": "ok",
-        "version": "2.0.2",
-        "chat_router": "router_chat+auth_user",
+        "version": "2.0.3",
+        "chat_module": "chat_api",
         "router_chat_signature": ROUTER_CHAT_SIGNATURE,
         "git_sha": os.environ.get("RAILWAY_GIT_COMMIT_SHA", "unknown"),
     }
