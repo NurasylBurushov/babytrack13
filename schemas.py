@@ -100,6 +100,11 @@ class NannyResponse(BaseModel):
         from_attributes = True
 
 
+class NannySelfUpdate(BaseModel):
+    """Обновление своего профиля няни (запись Nanny по user_id)."""
+    avatar_url: Optional[str] = None
+
+
 class NannyListResponse(BaseModel):
     nannies: List[NannyResponse]
     total: int

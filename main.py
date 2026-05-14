@@ -21,6 +21,7 @@ from router_nannies import router as nannies_router
 from chat_api import router as chat_router, ROUTER_CHAT_SIGNATURE
 from router_market import router as market_router
 from router_tracking import router as tracking_router
+from router_uploads import router as uploads_router
 
 
 # ------------------ lifespan ------------------
@@ -98,6 +99,7 @@ app.include_router(nannies_router, prefix="/api")
 app.include_router(chat_router, prefix="/api")
 app.include_router(market_router, prefix="/api")
 app.include_router(tracking_router, prefix="/api")
+app.include_router(uploads_router, prefix="/api")
 
 
 # ------------------ routes ------------------
@@ -110,12 +112,16 @@ async def root():
 @app.get("/health")
 async def health():
     """Проверка деплоя: после redeploy должны появиться git_sha и chat_router."""
+    from config import get_settings as _gs
+
+    s = _gs()
     return {
         "status": "ok",
         "version": "2.0.3",
         "chat_module": "chat_api",
         "router_chat_signature": ROUTER_CHAT_SIGNATURE,
         "git_sha": os.environ.get("RAILWAY_GIT_COMMIT_SHA", "unknown"),
+        "r2_ready": s.r2_configured,
     }
 
 
