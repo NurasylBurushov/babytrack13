@@ -1,4 +1,4 @@
-from config import settings
+
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
@@ -13,7 +13,8 @@ import random
 import string
 from datetime import datetime, timedelta, timezone
 from passlib.context import CryptContext
-
+from config import get_settings
+settings = get_settings()
 router = APIRouter(prefix="/auth", tags=["Авторизация"])
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
