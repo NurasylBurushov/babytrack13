@@ -1,4 +1,4 @@
-from pydantic import BaseModel, Field, validator
+from pydantic import BaseModel, Field, field_validator, validator
 from typing import Optional, List
 from datetime import datetime
 from uuid import UUID
@@ -89,6 +89,12 @@ class NannyResponse(BaseModel):
     is_verified: bool
     is_available: bool
     distance_km: Optional[float] = None   # вычисляется динамически
+
+    @field_validator("specialties", "languages", "work_days", mode="before")
+    @classmethod
+    def none_arrays_to_empty(cls, v):
+        """PostgreSQL ARRAY может прийти как NULL — для JSON и Pydantic нужны списки."""
+        return v if v is not None else []
 
     class Config:
         from_attributes = True
